@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  ramselvin-application-laravel:
+    container_name: ramselvin-application-laravel
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        UID: $U_ID
+    volumes:
+      - ./src:/var/www/html
+    # env_file:
+    #   - .env
+    depends_on:
+      - ramselvin-application-database
+    ###> XDEBUG 3 ### 
+    # Use your client IP here 
+    # Linux: run "ip a | grep docker0" 
+    # Windows (with WSL2) and Mac: host.docker.internal 
+    environment:
+      XDEBUG_CLIENT_HOST: 172.17.0.1
+      XDEBUG_CLIENT_PORT: 9003
+      PHP_IDE_CONFIG: serverName=ramselvin-application-laravel
+    ports:
+      - '9000:9000'
+    restart: always
+    networks:
+      - ramselvin-application-laravel-network
+
+  ramselvin-application-database:
+    container_name: ramselvin-application-database
+    build:
+      context: ./docker/database
+    ports:
+      - 10000:3306
+    environment:
+      MYSQL_DATABASE: ramselvin_database_local
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ramselvin-application-database-data:/var/lib/mysql
+    networks:
+      - ramselvin-application-laravel-network
+    command: [ 'mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci' ]
+
+volumes:
+  ramselvin-application-database-data:
+
+networks:
+  ramselvin-application-laravel-network:
+
+  
